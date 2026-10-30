@@ -6,6 +6,18 @@ Lyrics Lens is an interactive dashboard for exploring **927 English-screened son
 
 **[Open the dashboard](https://yun-1012.github.io/lyrics-lens-dashboard/)** · **[Explore the Python notebook](analysis/Lyrics_Lens_Main.ipynb)**
 
+## Dashboard preview
+
+### Overview
+
+![Lyrics Lens overview](assets/overview.png)
+
+### Song exploration
+
+Compare model predictions and inspect how removing repeated lines changes scores.
+
+![Song explorer and sentiment comparison](assets/song-explorer.png)
+
 Built from a Digital Humanities coursework project, with further data auditing, full-text chunked inference and interactive exploration. The website displays saved analysis outputs; it does not run live NLP inference or analyse audio.
 
 ## Explore the dashboard
