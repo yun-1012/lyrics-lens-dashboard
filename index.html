@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Lyrics Lens: an interactive NLP research dashboard exploring sentiment disagreement and lyric repetition across 927 song records."
+    />
+    <title>Lyrics Lens · One song, two readings</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#overview" aria-label="Lyrics Lens home"
+        ><span class="brand-mark" aria-hidden="true">ll</span>LYRICS<span
+          class="brand-light"
+          >LENS</span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#overview" data-nav="overview">Overview</a
+        ><a href="#explorer" data-nav="explorer">Song explorer</a
+        ><a href="#lab" data-nav="lab">Model lab</a
+        ><a href="#methods" data-nav="methods">Methods</a>
+      </nav>
+      <button class="export" id="copy-link" type="button">Copy link</button>
+      <span class="research-badge"><i></i> A RESEARCH PROJECT BY YUN</span>
+    </header>
+    <main id="main">
+      <div id="load-state" role="status">Loading the research dataset…</div>
+    </main>
+    <p id="share-status" class="share-status" role="status" aria-live="polite"></p>
+    <footer>
+      <a class="footer-brand" href="#overview">LYRICS LENS</a
+      ><span>Python · NLP · Interactive research</span
+      ><span>Analysis snapshot · 27 Oct 2026</span
+      ><a href="#methods">Data & limitations ↗</a>
+    </footer>
+    <div id="drawer-backdrop" class="backdrop" hidden></div>
+    <aside
+      id="song-drawer"
+      class="drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="drawer-title"
+      hidden
+    >
+      <button class="close" aria-label="Close song detail">✕</button>
+      <div id="drawer-content"></div>
+    </aside>
+    <div id="chart-tip" class="chart-tip" hidden></div>
+    <script src="app.js"></script>
+  </body>
+</html>
