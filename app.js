@@ -434,8 +434,9 @@ function renderResults(focusSelector) {
       class="section-heading"
       style="margin-top:8px"
     >
-      <span class="small-label">${rows.length} matching records</span
-      ><button class="export" id="export">Download filtered scores ↓</button>
+      <button class="export" id="export">
+        Download filtered scores ↓
+      </button>
     </div>
     <div class="table-wrap">
       <table>
