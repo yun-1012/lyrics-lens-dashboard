@@ -1,100 +1,139 @@
-# Lyrics Lens
+# Lyrics Lens — NLP Research Dashboard
 
-An interactive NLP research dashboard examining how two sentiment models interpret the same lyrics and how repeated-line removal changes their outputs.
+**How differently can two sentiment models read the same song?**
 
-This project extends a Digital Humanities coursework analysis. The website reads saved research outputs; it does not run a live model or analyse audio.
+Lyrics Lens is an interactive dashboard for exploring **927 English-screened song records**. It compares VADER and DistilBERT, examines sensitivity to repeated-line removal, and connects annual sentiment patterns to individual song records.
 
-## Features
+**[Open the dashboard](https://yun-1012.github.io/lyrics-lens-dashboard/)** · **[Explore the Python notebook](analysis/Lyrics_Lens_Main.ipynb)**
 
-- Search and filter 927 analysed song records.
-- Compare VADER and DistilBERT scores and labels.
-- Switch between full text and repeated-line-removed outputs.
-- Inspect per-record sensitivity and the 20 reviewed pilot cases.
-- Download filtered scores without distributing full lyrics.
-- Read methodology, provenance and limitations in expandable sections.
+Built from a Digital Humanities coursework project, with further data auditing, full-text chunked inference and interactive exploration. The website displays saved analysis outputs; it does not run live NLP inference or analyse audio.
 
-## Main findings
+## Explore the dashboard
 
-| Research diagnostic                                  | Result                                     |
-| ---------------------------------------------------- | ------------------------------------------ |
-| Score correlation                                    | Pearson r = 0.282                          |
-| Same-polarity agreement                              | 512 / 912 VADER non-neutral records, 56.1% |
-| VADER label changes after repeated-line removal      | 106 / 927, 11.4%                           |
-| DistilBERT label changes after repeated-line removal | 104 / 927, 11.2%                           |
+| View | What you can do |
+| --- | --- |
+| **Overview** | Inspect research indicators, the model-score scatter plot and selected disagreement cases. Compare annual positive shares for 2003–2022. |
+| **Song explorer** | Search by song or artist; combine year and model-result filters; switch text versions; sort, paginate and export filtered results. |
+| **Song details** | Compare full-text and unique-line scores, view processing sensitivity and pilot annotations, and copy a link to a record. |
+| **Model lab** | Examine model agreement, repeated-line sensitivity and the reviewed annotation pilot. |
+| **Methods** | Review sample construction, preprocessing, model definitions and exploratory clustering. |
 
-Model agreement is not accuracy. Repeated-line removal changes context and chunk boundaries as well as repetition. Clustering remained weakly separated; LSA improved K-means seed stability without establishing distinct lyric themes.
+Annual chart points and table years open the corresponding song records. URL parameters preserve exploration settings, including filters and the selected song.
+
+### A quick walkthrough
+
+1. Open **Everytime** from the overview to inspect a strong model disagreement.
+2. Search for **Rather Be** and compare VADER's full-text and unique-line results: its label changes from negative to positive.
+3. Switch the annual charts between **Full lyrics** and **Without repeated lines**, then select a year to inspect its records.
+4. Export the filtered scores from **Song explorer**.
+
+## Key findings
+
+| Diagnostic | Result | Interpretation |
+| --- | --- | --- |
+| Score correlation | **Pearson r = 0.282** | A weak positive linear relationship between the two score series. |
+| Same-polarity agreement | **512 / 912 = 56.1%** | Excludes 15 VADER-neutral records because DistilBERT has no neutral class. |
+| Opposite polarity | **400 records** | One model assigns positive and the other negative. |
+| VADER label changes after repeated-line removal | **106 / 927 = 11.4%** | Classification is sensitive to the text version for a subset of records. |
+| DistilBERT label changes after repeated-line removal | **104 / 927 = 11.2%** | Sensitivity also occurs with the transformer model. |
+
+Agreement measures whether predictions match, rather than whether they are correct. Removing repeated lines also changes text length, context and chunk boundaries.
+
+The full-text results classify **680 records as positive with VADER**, compared with **408 with DistilBERT**. The model choice therefore substantially changes the apparent sentiment distribution in this dataset.
+
+Annual charts show the **share labelled positive**, using all retained records in each year as the denominator. They use album/version metadata years and connect observed values without smoothing.
+
+## Data and analysis
+
+### Sample preparation
+
+The supplied Kaggle-derived Spotify metadata contains **9,999 rows**. The original workflow selected up to 50 records per album/version year from 2003–2022, ranked by the dataset's **Popularity** field.
+
+| Stage | Records |
+| --- | ---: |
+| Selected metadata records | 1,000 |
+| Lyrics retrieved | 988 |
+| After record deduplication and text-quality checks | 935 |
+| After language screening | 928 |
+| After a final identified lyric mismatch exclusion | **927** |
+
+Checks included duplicate URIs, recording identifiers (ISRCs), same-artist identical texts, language screening and observed lyric-quality issues. The saved analysis snapshot is dated **27 October 2026**.
+
+### Sentiment pipeline
+
+- Preserve raw text and create separate cleaned and unique-line versions. Unique-line processing ignores case and keeps the first occurrence of each repeated line.
+- Tokenize each version and split it into non-overlapping blocks of up to **384 tokens**.
+- Give both models the same decoded blocks and aggregate block scores using token-count weights.
+- **VADER:** weighted compound score; positive at ≥ 0.05, negative at ≤ −0.05, otherwise neutral.
+- **DistilBERT:** `distilbert/distilbert-base-uncased-finetuned-sst-2-english`, revision `714eb0f`. Transform each block's positive output as `2 × P(positive) − 1`, then aggregate; non-negative song scores are positive.
+
+The models were used for inference, not trained from scratch on these lyrics. Their score definitions differ, even though both displayed ranges are −1 to +1.
+
+### Reviewed annotation pilot
+
+A random pilot of **20 records** received AI-drafted labels and reasons, followed by author review: **10 positive, 5 negative and 5 mixed**. Among the 15 positive/negative cases, VADER matches 12 and DistilBERT matches 10. This is a small, AI-assisted reference comparison, not an independent accuracy benchmark. Mixed cases are excluded from the binary comparison.
+
+### Exploratory clustering
+
+TF-IDF and K-means were evaluated for **K = 2–8** across three K-means seeds. LSA with 50, 100 and 200 dimensions was also explored.
+
+| K = 2 representation | Original-space cosine silhouette | K-means seed stability (ARI) |
+| --- | ---: | ---: |
+| TF-IDF | 0.00738 | 0.681 |
+| LSA, 50 dimensions | 0.00746 | 0.920 |
+
+LSA improved consistency across K-means initializations, while separation remained weak. The dashboard therefore does not present the clusters as distinct, verified lyric themes.
+
+### Data scope and reproducibility
+
+- Popularity reflects the supplied dataset field, not verified historical chart positions. Album/version year is not necessarily the original release year.
+- The exact Kaggle source URL and popularity snapshot date remain undocumented; these are outstanding provenance tasks.
+- Not every retained lyric has been independently verified. The uncased tokenizer removes capitalization cues, and chunking can split context.
+- The notebook documents the research workflow, but rerunning inference requires the separately retained input CSV and a suitable Python environment. Exact dependency versions from the original environment were not recorded.
+- Full lyrics and raw lyric CSVs are not included in this repository. The website and CSV exports contain metadata and analysis results.
+
+## Technology
+
+| Layer | Tools |
+| --- | --- |
+| Data preparation and analysis | Python, pandas, NumPy, langdetect |
+| Sentiment inference | NLTK/VADER, Hugging Face Transformers, PyTorch |
+| Text representation and clustering | scikit-learn: TF-IDF, K-means, TruncatedSVD/LSA |
+| Interactive interface | HTML, CSS, JavaScript, SVG |
+| Hosting | GitHub Pages |
+
+The frontend needs no API key, npm installation or JavaScript build step. Paths are relative for GitHub Pages project hosting. Google Fonts are requested with system-font fallbacks.
 
 ## Run locally
 
-Python is needed only as a local static file server, not for model inference.
+Open the folder containing `index.html` and run:
 
-1. Open this project folder in VS Code.
-2. Open **Terminal → New Terminal**. Confirm that `index.html` is in the terminal's current folder.
-3. Run:
-
-```sh
+```bash
 python -m http.server 8000 --bind 127.0.0.1
 ```
 
-4. Open http://127.0.0.1:8000 in a browser.
-5. Stop the server with Ctrl+C when finished.
+Open **http://127.0.0.1:8000**. On Windows, use `py` instead of `python` if needed. Stop the server with **Ctrl+C**.
 
-On Windows, use `py` instead of `python` if that is how Python is installed. If port 8000 is occupied, choose 8001 in both the command and browser address.
+Python serves the static files only; it does not rerun the models. Opening `index.html` directly can block loading `data.json`, so use a local server.
 
-Do not double-click index.html: browsers can block the local `fetch('data.json')` request when using a file URL. VS Code Live Server is another option if already installed.
+## Repository structure
 
-## Files
+| Path | Purpose |
+| --- | --- |
+| `index.html` | Page shell, navigation and song-detail drawer |
+| `styles.css` | Typography, responsive layout and record animation |
+| `app.js` | Views, search, filters, SVG charts, shareable URLs and CSV export |
+| `data.json` | Saved song metadata, predictions, pilot annotations and clustering diagnostics |
+| `analysis/Lyrics_Lens_Main.ipynb` | Python analysis workflow |
 
-| File                              | Responsibility                                                                 |
-| --------------------------------- | ------------------------------------------------------------------------------ |
-| `index.html`                      | Page shell, navigation and detail drawer                                       |
-| `styles.css`                      | Typography, colours, layout and responsive rules                               |
-| `app.js`                          | Views, filters, SVG charts, details and CSV export                             |
-| `data.json`                       | Saved metadata, model outputs, reviewed annotations and clustering diagnostics |
-| `analysis/Lyrics_Lens_Main.ipynb` | Python research workflow; separate from website runtime                        |
-| `LEARNING_GUIDE.md`               | Guided local edits and publishing milestones                                   |
+For site updates, edit the local files, preview them, and commit the changed files to the repository's publishing branch. GitHub Pages then redeploys the site.
 
-All website paths are relative, so the app can run from a GitHub Pages project subdirectory. No JavaScript build step, API key or npm installation is needed. Fonts are requested from Google Fonts; system fonts are used as fallback.
+## Development and attribution
 
-## Analysis and provenance
-
-The workflow uses pandas, NumPy, scikit-learn, NLTK/VADER, Hugging Face Transformers, PyTorch and langdetect. The model is `distilbert/distilbert-base-uncased-finetuned-sst-2-english`, revision `714eb0f`.
-
-The supplied Spotify metadata file contains 9,999 rows. The original sample selected 50 records per album/version year from 2003–2022 using the dataset's Popularity field. The exact Kaggle dataset URL and original popularity snapshot date still need to be documented. Those dates do not establish historical popularity or original song release years.
-
-Of 1,000 selected records, 988 contained retrieved lyrics. Deduplication, language screening and observed text-quality exclusions produced the 927-record analysis snapshot dated 2026-10-27. Every retained lyric has not been independently verified. Full lyrics and raw CSV files are intentionally excluded from this web source package pending source licence verification.
-
-The notebook documents the analysis, but reproducing model inference requires the separately retained input CSV and a suitable Python environment. It does not require downloading the dataset to run the website. Exact dependency versions from the original user environment were not recorded.
-
-Both sentiment models received the same decoded, uncased token blocks of up to 384 tokens; outputs were token-count weighted. Losing original capitalization and splitting context are methodological limitations. VADER compound and transformed DistilBERT probabilities are different score definitions.
-
-The 20 pilot labels were drafted with AI assistance and reviewed by the project author. Their agreement proportions are not an independent blinded accuracy benchmark. AI also assisted with code development and documentation; the author executed the analysis and reviewed outputs.
-
-## GitHub Pages
-
-Publication is a separate milestone after local review. Intended repository name: `lyrics-lens-dashboard` (availability not yet confirmed).
-
-For a simple branch-based Pages deployment, upload the project contents with `index.html` at the repository root, then select the appropriate branch and `/ (root)` folder under **Settings → Pages**. Hosting availability depends on the repository/account configuration. Do not upload the enclosing ZIP as a substitute for its contents.
-
-## References
+AI assisted with code development, documentation and initial pilot annotations. The author executed the analysis, reviewed outputs and annotations, and iterated on the dashboard design and behaviour.
 
 - [VADER documentation](https://github.com/cjhutto/vaderSentiment)
 - [DistilBERT model card](https://huggingface.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english)
-- [scikit-learn TruncatedSVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html)
+- [scikit-learn TruncatedSVD documentation](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html)
 
-Code reuse licensing and raw dataset/lyric rights are separate matters. This repository currently makes no claim that raw lyrics are redistributable.
-
-## Year explorer
-
-The overview includes separate VADER and DistilBERT annual positive-share charts, a full/unique-line switch and a count table. Percentages use all retained records within each album/version metadata year. Lines connect observed annual values without smoothing.
-
-## Exploration updates
-
-- Filter songs by album/version metadata year, combined with search and model filters.
-- Select an annual chart point or table year to open all records for that year using the selected lyric version.
-- Share the current URL to restore filters, page, lab tab and open song. Use Copy link, including inside song details.
-- Song detail summaries follow the selected text version and include a Full-to-Unique score change chart.
-- CSV exports include album/version year.
-- Summary indicators and sensitivity bars read the saved dataset statistics; score means are calculated from records.
-
-Research reproduction gaps are tracked in [REPRODUCIBILITY.md](REPRODUCIBILITY.md). Browser acceptance steps are in [VERIFICATION.md](VERIFICATION.md).
+Code licensing and dataset/lyric rights are separate. This project does not claim redistribution rights over full lyrics.
