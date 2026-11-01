@@ -4,7 +4,7 @@
 
 Lyrics Lens is an interactive dashboard for exploring **927 English-screened song records**. It compares VADER and DistilBERT, examines sensitivity to repeated-line removal, and connects annual sentiment patterns to individual song records.
 
-**[Open the dashboard](https://yun-1012.github.io/lyrics-lens-dashboard/)** · **[Explore the Python notebook](analysis/Lyrics_Lens_Main.ipynb)**
+**[Open the dashboard](https://yun-1012.github.io/lyrics-lens-dashboard/)** · **[Browse the source code](analysis/Lyrics_Lens_Main.ipynb)**
 
 ## Dashboard preview
 
